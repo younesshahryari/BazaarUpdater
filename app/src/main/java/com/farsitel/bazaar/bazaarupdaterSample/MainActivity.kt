@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         checkAutoUpdateState()
+        checkPendingInstallState()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +35,7 @@ class MainActivity : ComponentActivity() {
                         onUpdateClick = ::updateApplication,
                         onAutoUpdateClick = ::enableAutoUpdate,
                         onCheckVersionClick = ::checkUpdateState,
+                        onInstallPendingUpdateClick = ::installPendingUpdate,
                     )
                 }
             }
@@ -51,6 +53,18 @@ class MainActivity : ComponentActivity() {
     private fun checkAutoUpdateState() {
         BazaarAutoUpdater.getLastAutoUpdateState(context = this) { result ->
             updateState.value = updateState.value.copy(autoUpdateResult = result)
+        }
+    }
+
+    private fun checkPendingInstallState() {
+        BazaarUpdater.getPendingInstallState(context = this) { result ->
+            updateState.value = updateState.value.copy(pendingInstallResult = result)
+        }
+    }
+
+    private fun installPendingUpdate() {
+        BazaarUpdater.installPendingUpdate(context = this) { result ->
+            updateState.value = updateState.value.copy(pendingInstallLaunchResult = result)
         }
     }
 

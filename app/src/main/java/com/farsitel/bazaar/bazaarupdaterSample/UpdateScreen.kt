@@ -19,6 +19,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.farsitel.bazaar.bazaarupdaterSample.ui.theme.BazaarUpdaterSampleTheme
 import com.farsitel.bazaar.updater.AutoUpdateState
+import com.farsitel.bazaar.updater.PendingInstallLaunchResult
+import com.farsitel.bazaar.updater.PendingInstallResult
+import com.farsitel.bazaar.updater.PendingInstallStatus
 import com.farsitel.bazaar.updater.UpdateResult
 
 @Composable
@@ -28,6 +31,7 @@ fun UpdateScreen(
     onUpdateClick: () -> Unit = {},
     onCheckVersionClick: () -> Unit = {},
     onAutoUpdateClick: () -> Unit = {},
+    onInstallPendingUpdateClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -76,6 +80,42 @@ fun UpdateScreen(
                     message = result.getError()?.message.orEmpty(),
                 )
             }
+        }
+
+        when (val result = updateState.value?.pendingInstallResult) {
+            null -> {}
+            is PendingInstallResult.Error -> ErrorView(
+                message = result.getError()?.message.orEmpty(),
+            )
+            is PendingInstallResult.State -> when (result.getStatus()) {
+                PendingInstallStatus.AVAILABLE -> UpdateButton(text = "Install downloaded update") {
+                    onInstallPendingUpdateClick()
+                }
+                else -> Text(
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = "Pending install: ${result.getStatus()}",
+                )
+            }
+        }
+
+        when (val result = updateState.value?.pendingInstallLaunchResult) {
+            null -> {}
+            PendingInstallLaunchResult.Started -> Text(
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                text = "The installer was opened by Bazaar",
+            )
+            is PendingInstallLaunchResult.NotStarted -> ErrorView(
+                message = "Install did not start: ${result.status}",
+            )
+            is PendingInstallLaunchResult.Error -> ErrorView(
+                message = result.getError()?.message.orEmpty(),
+            )
         }
     }
 }

@@ -174,6 +174,119 @@ To open the Bazaar Auto Update settings page for your application, call:
 BazaarAutoUpdater.enableAutoUpdate(context = context)
 ```
 
+## Pending Install
+
+Some devices, MIUI in particular, block an install that happens without the user
+being involved. Bazaar can download your update and still fail to install it, which
+leaves the update half finished. This feature lets your app detect that state and
+finish the install from inside itself: Bazaar keeps the already downloaded file and
+opens the system installer dialog on top of your screen, so the install becomes an
+interactive one and is no longer blocked.
+
+> ⚠️ Note: This feature requires Bazaar version 29.3.0 or higher.
+
+> ⚠️ Package Name : The package name (also known as the application ID in Android)
+> in your source code must exactly match the one used in the already published app.
+
+> ⚠️ Signature : The app must be signed with the same key as the published version.
+
+### Checking for a Pending Install
+
+To find out whether Bazaar holds a downloaded but not installed update for your
+application, use the following code:
+
+```kotlin
+BazaarUpdater.getPendingInstallState(context = context) { result ->
+    when (result.getStatus()) {
+        PendingInstallStatus.AVAILABLE -> {
+            // Bazaar holds a downloaded update that can be installed right now
+        }
+        PendingInstallStatus.NO_PENDING_UPDATE -> {
+            // Nothing was downloaded and left behind
+        }
+        PendingInstallStatus.INSTALL_PERMISSION_REQUIRED -> {
+            // The user has to allow Bazaar to install apps on this device
+        }
+        else -> {
+            val errorMessage = result.getError()?.message
+        }
+    }
+}
+```
+
+<details>
+<summary><strong>Java Usage</strong></summary>
+
+```java
+BazaarUpdater.getPendingInstallState(context, result -> {
+    PendingInstallStatus status = result.getStatus();
+    if (status == PendingInstallStatus.AVAILABLE) {
+        // Bazaar holds a downloaded update that can be installed right now
+    } else if (result.getError() != null) {
+        String errorMessage = result.getError().getMessage();
+    }
+});
+```
+
+</details>
+
+#### Pending Install States
+
+##### 1. `AVAILABLE`: A downloaded update exists and Bazaar can install it right now.
+
+##### 2. `NO_PENDING_UPDATE`: Bazaar has no download waiting for this package.
+
+##### 3. `ALREADY_INSTALLED`: The installed version is already at or above the downloaded one.
+
+##### 4. `NOT_DOWNLOADED`: Bazaar remembers a download for this package but the apk file is gone.
+
+##### 5. `INSTALL_PERMISSION_REQUIRED`: Bazaar is missing the permission to install apps on this device, so the user has to grant it before an install can start.
+
+##### 6. `ACCESS_DENIED`: The calling application does not own the package it asked about.
+
+##### 7. `UNSUPPORTED_PACKAGE_TYPE`: The download is an app bundle, which this API cannot install yet.
+
+##### 8. `FAILED`: The install could not be prepared even though the download is in place.
+
+### Installing a Pending Update
+
+Once the state is `AVAILABLE`, ask Bazaar to install it:
+
+```kotlin
+BazaarUpdater.installPendingUpdate(context = context) { result ->
+    when (result) {
+        is PendingInstallLaunchResult.Started -> {
+            // The system install dialog is now open on top of your app
+        }
+        is PendingInstallLaunchResult.NotStarted -> {
+            // Bazaar refused, result.status says why
+        }
+        is PendingInstallLaunchResult.Error -> {
+            val errorMessage = result.getError()?.message
+        }
+    }
+}
+```
+
+<details>
+<summary><strong>Java Usage</strong></summary>
+
+```java
+BazaarUpdater.installPendingUpdate(context, result -> {
+    if (result.isStarted()) {
+        // The system install dialog is now open on top of your app
+    } else if (result.getError() != null) {
+        String errorMessage = result.getError().getMessage();
+    }
+});
+```
+
+</details>
+
+Call `installPendingUpdate` from a foreground screen of your app. The dialog
+belongs to the system installer, so the user completes the install there and comes
+back to your app when it is done.
+
 ## Contributing
 
 Contributions are welcome! If you have suggestions or improvements, please open an issue or submit a pull request.

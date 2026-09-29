@@ -16,6 +16,30 @@ public abstract class com/farsitel/bazaar/IAutoUpdateCheckService$Stub : android
 	public fun onTransact (ILandroid/os/Parcel;Landroid/os/Parcel;I)Z
 }
 
+public abstract interface class com/farsitel/bazaar/IPendingInstallService : android/os/IInterface {
+	public static final field DESCRIPTOR Ljava/lang/String;
+	public abstract fun getPendingInstallState (Ljava/lang/String;)Lcom/farsitel/bazaar/PendingInstallState;
+	public abstract fun installPendingUpdate (Ljava/lang/String;)Lcom/farsitel/bazaar/PendingInstallState;
+}
+
+public class com/farsitel/bazaar/IPendingInstallService$Default : com/farsitel/bazaar/IPendingInstallService {
+	public fun <init> ()V
+	public fun asBinder ()Landroid/os/IBinder;
+	public fun getPendingInstallState (Ljava/lang/String;)Lcom/farsitel/bazaar/PendingInstallState;
+	public fun installPendingUpdate (Ljava/lang/String;)Lcom/farsitel/bazaar/PendingInstallState;
+}
+
+public abstract class com/farsitel/bazaar/IPendingInstallService$Stub : android/os/Binder, com/farsitel/bazaar/IPendingInstallService {
+	public fun <init> ()V
+	public fun asBinder ()Landroid/os/IBinder;
+	public static fun asInterface (Landroid/os/IBinder;)Lcom/farsitel/bazaar/IPendingInstallService;
+	public fun onTransact (ILandroid/os/Parcel;Landroid/os/Parcel;I)Z
+}
+
+public class com/farsitel/bazaar/IPendingInstallService$_Parcel {
+	public fun <init> ()V
+}
+
 public abstract interface class com/farsitel/bazaar/IUpdateCheckService : android/os/IInterface {
 	public static final field DESCRIPTOR Ljava/lang/String;
 	public abstract fun getRemoteVersionCode (Ljava/lang/String;)J
@@ -39,6 +63,16 @@ public abstract class com/farsitel/bazaar/IUpdateCheckService$Stub : android/os/
 public final class com/farsitel/bazaar/updater/-AutoUpdateResult {
 	public static final fun doOnError (Lcom/farsitel/bazaar/updater/AutoUpdateResult;Lkotlin/jvm/functions/Function1;)Lcom/farsitel/bazaar/updater/AutoUpdateResult;
 	public static final fun doOnResult (Lcom/farsitel/bazaar/updater/AutoUpdateResult;Lkotlin/jvm/functions/Function1;)Lcom/farsitel/bazaar/updater/AutoUpdateResult;
+}
+
+public final class com/farsitel/bazaar/updater/-PendingInstallLaunchResult {
+	public static final fun doOnError (Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult;Lkotlin/jvm/functions/Function1;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult;
+	public static final fun doOnStarted (Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult;Lkotlin/jvm/functions/Function0;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult;
+}
+
+public final class com/farsitel/bazaar/updater/-PendingInstallResult {
+	public static final fun doOnError (Lcom/farsitel/bazaar/updater/PendingInstallResult;Lkotlin/jvm/functions/Function1;)Lcom/farsitel/bazaar/updater/PendingInstallResult;
+	public static final fun doOnPendingInstallAvailable (Lcom/farsitel/bazaar/updater/PendingInstallResult;Lkotlin/jvm/functions/Function0;)Lcom/farsitel/bazaar/updater/PendingInstallResult;
 }
 
 public final class com/farsitel/bazaar/updater/-UpdateResult {
@@ -106,6 +140,10 @@ public final class com/farsitel/bazaar/updater/BazaarUpdater {
 	public static final field INSTANCE Lcom/farsitel/bazaar/updater/BazaarUpdater;
 	public static final fun getLastUpdateState (Landroid/content/Context;Lcom/farsitel/bazaar/updater/OnUpdateResult;)V
 	public final synthetic fun getLastUpdateState (Landroid/content/Context;Lkotlinx/coroutines/CoroutineScope;Lcom/farsitel/bazaar/updater/OnUpdateResult;)V
+	public static final fun getPendingInstallState (Landroid/content/Context;Lcom/farsitel/bazaar/updater/OnPendingInstallResult;)V
+	public final synthetic fun getPendingInstallState (Landroid/content/Context;Lkotlinx/coroutines/CoroutineScope;Lcom/farsitel/bazaar/updater/OnPendingInstallResult;)V
+	public static final fun installPendingUpdate (Landroid/content/Context;Lcom/farsitel/bazaar/updater/OnPendingInstallLaunchResult;)V
+	public final synthetic fun installPendingUpdate (Landroid/content/Context;Lkotlinx/coroutines/CoroutineScope;Lcom/farsitel/bazaar/updater/OnPendingInstallLaunchResult;)V
 	public static final fun updateApplication (Landroid/content/Context;)V
 }
 
@@ -113,8 +151,89 @@ public abstract interface class com/farsitel/bazaar/updater/OnAutoUpdateResult {
 	public abstract fun onResult (Lcom/farsitel/bazaar/updater/AutoUpdateResult;)V
 }
 
+public abstract interface class com/farsitel/bazaar/updater/OnPendingInstallLaunchResult {
+	public abstract fun onResult (Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult;)V
+}
+
+public abstract interface class com/farsitel/bazaar/updater/OnPendingInstallResult {
+	public abstract fun onResult (Lcom/farsitel/bazaar/updater/PendingInstallResult;)V
+}
+
 public abstract interface class com/farsitel/bazaar/updater/OnUpdateResult {
 	public abstract fun onResult (Lcom/farsitel/bazaar/updater/UpdateResult;)V
+}
+
+public abstract class com/farsitel/bazaar/updater/PendingInstallLaunchResult {
+	public final fun getError ()Ljava/lang/Throwable;
+	public final fun isStarted ()Z
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallLaunchResult$Error : com/farsitel/bazaar/updater/PendingInstallLaunchResult {
+	public fun <init> (Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/Throwable;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$Error;
+	public static synthetic fun copy$default (Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$Error;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getThrowable ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallLaunchResult$NotStarted : com/farsitel/bazaar/updater/PendingInstallLaunchResult {
+	public fun <init> (Lcom/farsitel/bazaar/updater/PendingInstallStatus;)V
+	public final fun component1 ()Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public final fun copy (Lcom/farsitel/bazaar/updater/PendingInstallStatus;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$NotStarted;
+	public static synthetic fun copy$default (Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$NotStarted;Lcom/farsitel/bazaar/updater/PendingInstallStatus;ILjava/lang/Object;)Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$NotStarted;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStatus ()Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallLaunchResult$Started : com/farsitel/bazaar/updater/PendingInstallLaunchResult {
+	public static final field INSTANCE Lcom/farsitel/bazaar/updater/PendingInstallLaunchResult$Started;
+}
+
+public abstract class com/farsitel/bazaar/updater/PendingInstallResult {
+	public final fun getError ()Ljava/lang/Throwable;
+	public final fun getInstalledVersionCode ()J
+	public final fun getStatus ()Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public final fun getTargetVersionCode ()J
+	public final fun isPendingInstallAvailable ()Z
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallResult$Error : com/farsitel/bazaar/updater/PendingInstallResult {
+	public fun <init> (Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/Throwable;)Lcom/farsitel/bazaar/updater/PendingInstallResult$Error;
+	public static synthetic fun copy$default (Lcom/farsitel/bazaar/updater/PendingInstallResult$Error;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/farsitel/bazaar/updater/PendingInstallResult$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getThrowable ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallResult$State : com/farsitel/bazaar/updater/PendingInstallResult {
+	public fun <init> (IJJ)V
+	public final fun copy (IJJ)Lcom/farsitel/bazaar/updater/PendingInstallResult$State;
+	public static synthetic fun copy$default (Lcom/farsitel/bazaar/updater/PendingInstallResult$State;IJJILjava/lang/Object;)Lcom/farsitel/bazaar/updater/PendingInstallResult$State;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/farsitel/bazaar/updater/PendingInstallStatus : java/lang/Enum {
+	public static final field ACCESS_DENIED Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field ALREADY_INSTALLED Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field AVAILABLE Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field FAILED Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field INSTALL_PERMISSION_REQUIRED Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field NOT_DOWNLOADED Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field NO_PENDING_UPDATE Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field UNKNOWN Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static final field UNSUPPORTED_PACKAGE_TYPE Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static fun valueOf (Ljava/lang/String;)Lcom/farsitel/bazaar/updater/PendingInstallStatus;
+	public static fun values ()[Lcom/farsitel/bazaar/updater/PendingInstallStatus;
 }
 
 public final class com/farsitel/bazaar/updater/ServiceDisconnectionException : java/lang/RuntimeException {
