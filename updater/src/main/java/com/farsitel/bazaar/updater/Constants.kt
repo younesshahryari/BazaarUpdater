@@ -5,7 +5,6 @@ package com.farsitel.bazaar.updater
 
 internal const val BAZAAR_UPDATE_INTENT = "com.farsitel.bazaar.service.UpdateCheckService.BIND"
 internal const val BAZAAR_AUTO_UPDATE_INTENT = "com.farsitel.bazaar.service.AutoUpdateCheckService.BIND"
-internal const val BAZAAR_PENDING_INSTALL_INTENT = "com.farsitel.bazaar.service.PendingInstallService.BIND"
 internal const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
 internal const val BAZAAR_THIRD_PARTY_APP_DETAIL = "bazaar://details/modal?id="
 internal const val BAZAAR_THIRD_PARTY_AUTO_UPDATE = "bazaar://autoupdate/modal?id="
@@ -16,7 +15,7 @@ internal const val BAZAAR_CODE_REMOTE_VERSION_SUPPORTED = 2400700
 internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
 
 /**
- * Bazaar version that first ships the pending-install service, i.e. 29.3.0. Bump
- * this if the service is released in a later version.
+ * Bazaar version that first answers [IUpdateCheckService.isUpdateDownloaded], i.e.
+ * 29.3.0. Bump this if it is released in a later version.
  */
-internal const val BAZAAR_CODE_PENDING_INSTALL_SUPPORTED = 2900300
+internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900300

@@ -3,16 +3,15 @@ package com.farsitel.bazaar.updater
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.farsitel.bazaar.IPendingInstallService
-import com.farsitel.bazaar.PendingInstallState
+import com.farsitel.bazaar.IUpdateCheckService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-internal class PendingInstallServiceConnection(
+internal class UpdateDownloadedServiceConnection(
+    private val packageName: String,
     private val scope: CoroutineScope,
-    private val call: (IPendingInstallService) -> PendingInstallState?,
-    private val onState: (PendingInstallState) -> Unit,
+    private val onResult: (Boolean) -> Unit,
     private val onError: (Throwable) -> Unit,
 ) : ServiceConnection {
 
@@ -26,12 +25,12 @@ internal class PendingInstallServiceConnection(
 
     override fun onServiceConnected(name: ComponentName?, boundService: IBinder?) {
         try {
-            val service = IPendingInstallService.Stub.asInterface(boundService)
+            val service = IUpdateCheckService.Stub.asInterface(boundService)
             scope.launch(Dispatchers.IO) {
                 try {
-                    val state = service?.let(call)
-                    if (state != null) {
-                        onState(state)
+                    val isDownloaded = service?.isUpdateDownloaded(packageName)
+                    if (isDownloaded != null) {
+                        onResult(isDownloaded)
                     } else {
                         onError(UnknownException())
                     }

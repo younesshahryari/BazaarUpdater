@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.farsitel.bazaar.PendingInstallState
 import com.farsitel.bazaar.updater.VersionParser.parseUpdateResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -15,8 +14,7 @@ import java.lang.ref.WeakReference
 public object BazaarUpdater {
 
     private var connection: WeakReference<UpdateServiceConnection>? = null
-    private var pendingInstallConnection: WeakReference<PendingInstallServiceConnection>? = null
-    private var pendingInstallLaunchConnection: WeakReference<PendingInstallServiceConnection>? = null
+    private var updateDownloadedConnection: WeakReference<UpdateDownloadedServiceConnection>? = null
 
     @JvmStatic
     public fun getLastUpdateState(
@@ -64,54 +62,19 @@ public object BazaarUpdater {
     }
 
     /**
-     * Asks Bazaar whether it holds an update for this application that was already
+     * Tells whether Bazaar holds an update for this application that was already
      * downloaded but never installed, for example because the device refused the
      * silent install that the Bazaar scheduler attempted.
-     */
-    @JvmStatic
-    public fun getPendingInstallState(
-        context: Context,
-        listener: OnPendingInstallResult,
-    ) {
-        getPendingInstallState(
-            context = context,
-            scope = retrieveScope(context),
-            listener = listener,
-        )
-    }
-
-    @JvmSynthetic
-    public fun getPendingInstallState(
-        context: Context,
-        scope: CoroutineScope,
-        listener: OnPendingInstallResult,
-    ) {
-        if (verifyBazaarIsInstalled(context).not()) {
-            listener.onResult(PendingInstallResult.Error(BazaarIsNotInstalledException()))
-        } else {
-            initPendingInstallService(
-                context = context,
-                scope = scope,
-                listener = listener,
-            )
-        }
-    }
-
-    /**
-     * Asks Bazaar to install the update it has already downloaded. The user only
-     * sees the system install dialog, which is opened on top of this application,
-     * so the install is interactive and is not affected by the silent-install
-     * restrictions of some devices.
      *
-     * Call it from a foreground screen of the app, otherwise the system may refuse
-     * to open the installer UI.
+     * When it answers true, [updateApplication] is the way to finish that update:
+     * Bazaar's app page installs the ready download the user already has.
      */
     @JvmStatic
-    public fun installPendingUpdate(
+    public fun isUpdateDownloaded(
         context: Context,
-        listener: OnPendingInstallLaunchResult,
+        listener: OnUpdateDownloadedResult,
     ) {
-        installPendingUpdate(
+        isUpdateDownloaded(
             context = context,
             scope = retrieveScope(context),
             listener = listener,
@@ -119,15 +82,17 @@ public object BazaarUpdater {
     }
 
     @JvmSynthetic
-    public fun installPendingUpdate(
+    public fun isUpdateDownloaded(
         context: Context,
         scope: CoroutineScope,
-        listener: OnPendingInstallLaunchResult,
+        listener: OnUpdateDownloadedResult,
     ) {
         if (verifyBazaarIsInstalled(context).not()) {
-            listener.onResult(PendingInstallLaunchResult.Error(BazaarIsNotInstalledException()))
+            listener.onResult(UpdateDownloadedResult.Error(BazaarIsNotInstalledException()))
+        } else if (isUpdateDownloadedSupported(context).not()) {
+            listener.onResult(UpdateDownloadedResult.Error(updateDownloadedNotSupported()))
         } else {
-            initPendingInstallLaunchService(
+            initUpdateDownloadedService(
                 context = context,
                 scope = scope,
                 listener = listener,
@@ -146,69 +111,36 @@ public object BazaarUpdater {
         }
     }
 
-    private fun initPendingInstallService(
+    private fun initUpdateDownloadedService(
         context: Context,
         scope: CoroutineScope,
-        listener: OnPendingInstallResult,
+        listener: OnUpdateDownloadedResult,
     ) {
-        if (isPendingInstallSupported(context).not()) {
-            listener.onResult(PendingInstallResult.Error(pendingInstallNotSupported()))
-        } else {
-            lateinit var con: PendingInstallServiceConnection
-            con = PendingInstallServiceConnection(
-                scope = scope,
-                call = { service -> service.getPendingInstallState(context.packageName) },
-                onState = { state ->
-                    listener.onResult(state.toPendingInstallResult())
-                    releasePendingInstallService(context, con)
-                },
-                onError = { throwable ->
-                    listener.onResult(PendingInstallResult.Error(throwable))
-                    releasePendingInstallService(context, con)
-                },
-            )
-            pendingInstallConnection = WeakReference(con)
-            if (bindPendingInstallService(context, con).not()) {
-                listener.onResult(PendingInstallResult.Error(UnknownException()))
-                releasePendingInstallService(context, con)
-            }
+        lateinit var con: UpdateDownloadedServiceConnection
+        con = UpdateDownloadedServiceConnection(
+            packageName = context.packageName,
+            scope = scope,
+            onResult = { isDownloaded ->
+                listener.onResult(UpdateDownloadedResult.Result(isDownloaded))
+                releaseUpdateDownloadedService(context, con)
+            },
+            onError = { throwable ->
+                listener.onResult(UpdateDownloadedResult.Error(throwable))
+                releaseUpdateDownloadedService(context, con)
+            },
+        )
+        updateDownloadedConnection = WeakReference(con)
+        if (bindUpdateCheckService(context, con).not()) {
+            listener.onResult(UpdateDownloadedResult.Error(UnknownException()))
+            releaseUpdateDownloadedService(context, con)
         }
     }
 
-    private fun initPendingInstallLaunchService(
+    private fun bindUpdateCheckService(
         context: Context,
-        scope: CoroutineScope,
-        listener: OnPendingInstallLaunchResult,
-    ) {
-        if (isPendingInstallSupported(context).not()) {
-            listener.onResult(PendingInstallLaunchResult.Error(pendingInstallNotSupported()))
-        } else {
-            lateinit var con: PendingInstallServiceConnection
-            con = PendingInstallServiceConnection(
-                scope = scope,
-                call = { service -> service.installPendingUpdate(context.packageName) },
-                onState = { state ->
-                    listener.onResult(launchPendingInstall(context, state))
-                    releasePendingInstallService(context, con)
-                },
-                onError = { throwable ->
-                    listener.onResult(PendingInstallLaunchResult.Error(throwable))
-                    releasePendingInstallService(context, con)
-                },
-            )
-            pendingInstallLaunchConnection = WeakReference(con)
-            if (bindPendingInstallService(context, con).not()) {
-                listener.onResult(PendingInstallLaunchResult.Error(UnknownException()))
-                releasePendingInstallService(context, con)
-            }
-        }
-    }
-
-    private fun bindPendingInstallService(
-        context: Context,
-        con: PendingInstallServiceConnection,
+        con: UpdateDownloadedServiceConnection,
     ): Boolean {
-        val intent = Intent(BAZAAR_PENDING_INSTALL_INTENT)
+        val intent = Intent(BAZAAR_UPDATE_INTENT)
         intent.setPackage(BAZAAR_PACKAGE_NAME)
         return try {
             val isBound = context.bindService(intent, con, Context.BIND_AUTO_CREATE)
@@ -226,18 +158,15 @@ public object BazaarUpdater {
      * overlapping connections: each connection is unbound exactly once, and a
      * stale/never-registered connection is a no-op.
      */
-    private fun releasePendingInstallService(
+    private fun releaseUpdateDownloadedService(
         context: Context,
-        con: PendingInstallServiceConnection,
+        con: UpdateDownloadedServiceConnection,
     ) {
         val shouldUnbind = synchronized(this) {
             val wasBound = con.isBound
             con.isBound = false
-            if (pendingInstallConnection?.get() === con) {
-                pendingInstallConnection = null
-            }
-            if (pendingInstallLaunchConnection?.get() === con) {
-                pendingInstallLaunchConnection = null
+            if (updateDownloadedConnection?.get() === con) {
+                updateDownloadedConnection = null
             }
             wasBound
         }
@@ -250,43 +179,14 @@ public object BazaarUpdater {
         }
     }
 
-    /**
-     * Launching the sender Bazaar built, rather than a plain intent, is what keeps
-     * the apk readable for the installer: the read grant comes from Bazaar, which
-     * owns the provider serving the downloaded file, instead of from the caller.
-     */
-    private fun launchPendingInstall(
-        context: Context,
-        state: PendingInstallState,
-    ): PendingInstallLaunchResult {
-        val status = pendingInstallStatusOf(state.status)
-        val intentSender = state.installIntentSender
-            ?: return PendingInstallLaunchResult.NotStarted(status)
-
-        return try {
-            intentSender.sendIntent(context, 0, null, null, null)
-            PendingInstallLaunchResult.Started
-        } catch (exception: Exception) {
-            PendingInstallLaunchResult.Error(exception)
-        }
+    private fun isUpdateDownloadedSupported(context: Context): Boolean {
+        return getBazaarVersionCode(context) >= BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED
     }
 
-    private fun isPendingInstallSupported(context: Context): Boolean {
-        return getBazaarVersionCode(context) >= BAZAAR_CODE_PENDING_INSTALL_SUPPORTED
-    }
-
-    private fun pendingInstallNotSupported(): Throwable {
+    private fun updateDownloadedNotSupported(): Throwable {
         return BazaarIsNotUpdate(
-            "Pending install is supported in bazaar version" +
-                " $BAZAAR_CODE_PENDING_INSTALL_SUPPORTED and above",
-        )
-    }
-
-    private fun PendingInstallState.toPendingInstallResult(): PendingInstallResult {
-        return PendingInstallResult.State(
-            statusValue = status,
-            targetVersion = targetVersionCode,
-            installedVersion = installedVersionCode,
+            "The downloaded-update check is supported in bazaar version" +
+                " $BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED and above",
         )
     }
 
