@@ -8,6 +8,7 @@ internal const val BAZAAR_AUTO_UPDATE_INTENT = "com.farsitel.bazaar.service.Auto
 internal const val BAZAAR_PACKAGE_NAME = "com.farsitel.bazaar"
 internal const val BAZAAR_THIRD_PARTY_APP_DETAIL = "bazaar://details/modal?id="
 internal const val BAZAAR_THIRD_PARTY_AUTO_UPDATE = "bazaar://autoupdate/modal?id="
+internal const val BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE = "bazaar://install/modal?id="
 internal const val BAZAAR_WEB_APP_DETAIL = "https://cafebazaar.ir/app/?id="
 internal const val BAZAAR_ERROR_RESULT = -1L
 
@@ -18,4 +19,4 @@ internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
  * Bazaar version that first answers [IUpdateCheckService.isUpdateDownloaded], i.e.
  * 29.3.0. Bump this if it is released in a later version.
  */
-internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900300
+internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900100

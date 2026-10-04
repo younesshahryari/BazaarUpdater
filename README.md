@@ -212,16 +212,18 @@ It answers `true` only for the calling application's own package, and only when 
 of these hold: Bazaar has a finished download for it, its version is newer than the
 installed one, and the app on the device is signed the way Bazaar expects.
 
-To finish that update, use `updateApplication()`. Bazaar's app page already installs
-a download it is holding, so the user taps install there and the system installer
-dialog completes it:
+To finish that update, call `installDownloadedUpdate()`. Bazaar opens its install
+flow for the download it is holding on top of your screen, and the user only sees
+the system install dialog:
 
 ```kotlin
-BazaarUpdater.updateApplication(context = context)
+BazaarUpdater.installDownloadedUpdate(context = context)
 ```
 
-Nothing else is needed: the download is already on the device, so the page goes
-straight to installing it instead of downloading again.
+Nothing is downloaded again. If the user has not allowed Bazaar to install apps on
+this device yet, Bazaar asks for that permission in this same flow and finishes the
+install as soon as it is granted. Installed Bazaar versions that do not know this
+action simply do nothing, so it is safe to call.
 
 
 ## Contributing

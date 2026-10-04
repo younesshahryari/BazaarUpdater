@@ -1,5 +1,6 @@
 package com.farsitel.bazaar.updater
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
@@ -66,8 +67,8 @@ public object BazaarUpdater {
      * downloaded but never installed, for example because the device refused the
      * silent install that the Bazaar scheduler attempted.
      *
-     * When it answers true, [updateApplication] is the way to finish that update:
-     * Bazaar's app page installs the ready download the user already has.
+     * When it answers true, [installDownloadedUpdate] is the way to finish that
+     * update.
      */
     @JvmStatic
     public fun isUpdateDownloaded(
@@ -97,6 +98,31 @@ public object BazaarUpdater {
                 scope = scope,
                 listener = listener,
             )
+        }
+    }
+
+    /**
+     * Opens Bazaar's install flow for the update it has already downloaded for this
+     * application, so the user only sees the system install dialog on top of your
+     * screen. Nothing is downloaded again: Bazaar installs the file it is holding.
+     *
+     * Call it from a foreground screen when [isUpdateDownloaded] answers true. On a
+     * device where Bazaar is not allowed to install apps yet, Bazaar asks for that
+     * permission in this same flow and finishes the install once it is granted.
+     */
+    @JvmStatic
+    public fun installDownloadedUpdate(context: Context) {
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            "$BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE${context.packageName}".toUri(),
+        ).apply {
+            setPackage(BAZAAR_PACKAGE_NAME)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (ignored: ActivityNotFoundException) {
+            // Installed Bazaar version does not support this deep link yet.
         }
     }
 

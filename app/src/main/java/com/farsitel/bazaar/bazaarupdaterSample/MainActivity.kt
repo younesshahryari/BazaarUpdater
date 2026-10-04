@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                         onUpdateClick = ::updateApplication,
                         onAutoUpdateClick = ::enableAutoUpdate,
                         onCheckVersionClick = ::checkUpdateState,
+                        onInstallDownloadedUpdateClick = ::installDownloadedUpdate,
                     )
                 }
             }
@@ -59,6 +60,10 @@ class MainActivity : ComponentActivity() {
         BazaarUpdater.isUpdateDownloaded(context = this) { result ->
             updateState.value = updateState.value.copy(updateDownloadedResult = result)
         }
+    }
+
+    private fun installDownloadedUpdate() {
+        BazaarUpdater.installDownloadedUpdate(context = this)
     }
 
     private fun checkUpdateState() {

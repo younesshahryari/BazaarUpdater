@@ -113,6 +113,7 @@ public final class com/farsitel/bazaar/updater/BazaarUpdater {
 	public static final field INSTANCE Lcom/farsitel/bazaar/updater/BazaarUpdater;
 	public static final fun getLastUpdateState (Landroid/content/Context;Lcom/farsitel/bazaar/updater/OnUpdateResult;)V
 	public final synthetic fun getLastUpdateState (Landroid/content/Context;Lkotlinx/coroutines/CoroutineScope;Lcom/farsitel/bazaar/updater/OnUpdateResult;)V
+	public static final fun installDownloadedUpdate (Landroid/content/Context;)V
 	public static final fun isUpdateDownloaded (Landroid/content/Context;Lcom/farsitel/bazaar/updater/OnUpdateDownloadedResult;)V
 	public final synthetic fun isUpdateDownloaded (Landroid/content/Context;Lkotlinx/coroutines/CoroutineScope;Lcom/farsitel/bazaar/updater/OnUpdateDownloadedResult;)V
 	public static final fun updateApplication (Landroid/content/Context;)V

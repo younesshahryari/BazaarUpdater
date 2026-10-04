@@ -29,6 +29,7 @@ fun UpdateScreen(
     onUpdateClick: () -> Unit = {},
     onCheckVersionClick: () -> Unit = {},
     onAutoUpdateClick: () -> Unit = {},
+    onInstallDownloadedUpdateClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -86,7 +87,7 @@ fun UpdateScreen(
             )
             is UpdateDownloadedResult.Result -> if (result.isDownloaded()) {
                 UpdateButton(text = "Finish the downloaded update") {
-                    onUpdateClick()
+                    onInstallDownloadedUpdateClick()
                 }
             } else {
                 Text(
