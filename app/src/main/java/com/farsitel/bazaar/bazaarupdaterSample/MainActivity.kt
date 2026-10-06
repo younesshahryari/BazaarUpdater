@@ -1,6 +1,7 @@
 package com.farsitel.bazaar.bazaarupdaterSample
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -63,7 +64,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installDownloadedUpdate() {
-        BazaarUpdater.installDownloadedUpdate(context = this)
+        BazaarUpdater.installDownloadedUpdate(context = this) { result ->
+            result.getError()?.let {
+                Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun checkUpdateState() {

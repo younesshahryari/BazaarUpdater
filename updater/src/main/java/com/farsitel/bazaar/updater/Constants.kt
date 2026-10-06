@@ -11,6 +11,12 @@ internal const val BAZAAR_THIRD_PARTY_AUTO_UPDATE = "bazaar://autoupdate/modal?i
 internal const val BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE = "bazaar://install/modal?id="
 internal const val BAZAAR_WEB_APP_DETAIL = "https://cafebazaar.ir/app/?id="
 internal const val BAZAAR_ERROR_RESULT = -1L
+internal const val INSTALL_RESULT_RECEIVER_EXTRA =
+    "com.farsitel.bazaar.updater.extra.INSTALL_RESULT_RECEIVER"
+internal const val INSTALL_CALLER_IDENTITY_EXTRA =
+    "com.farsitel.bazaar.updater.extra.INSTALL_CALLER_IDENTITY"
+internal const val INSTALL_RESULT_SUCCESS = 0
+internal const val INSTALL_RESULT_ERROR = 1
 
 internal const val BAZAAR_CODE_REMOTE_VERSION_SUPPORTED = 2400700
 internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
@@ -20,3 +26,4 @@ internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
  * 29.3.0. Bump this if it is released in a later version.
  */
 internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900100
+internal const val BAZAAR_CODE_INSTALL_DOWNLOADED_RESULT_SUPPORTED = 2900100
