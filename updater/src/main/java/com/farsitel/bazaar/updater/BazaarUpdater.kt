@@ -112,9 +112,59 @@ public object BazaarUpdater {
      */
     @JvmStatic
     public fun installDownloadedUpdate(context: Context) {
+        openDownloadedUpdateInstall(context = context)
+    }
+
+    /**
+     * Same as [installDownloadedUpdate], but it waits for Bazaar to fetch the update's
+     * install metadata before any Bazaar screen is opened. The install dialog is only
+     * shown when that request succeeds, and [listener] is told about the failure
+     * otherwise, for example when there is no connection or the server answers with an
+     * error.
+     */
+    @JvmStatic
+    public fun installDownloadedUpdate(
+        context: Context,
+        listener: OnInstallDownloadedUpdateResult,
+    ) {
+        if (verifyBazaarIsInstalled(context).not()) {
+            listener.onResult(
+                InstallDownloadedUpdateResult.Error(BazaarIsNotInstalledException()),
+            )
+        } else if (isUpdateDownloadedSupported(context).not()) {
+            listener.onResult(InstallDownloadedUpdateResult.Error(updateDownloadedNotSupported()))
+        } else {
+            initPrepareInstallConnection(context = context, listener = listener)
+        }
+    }
+
+    private fun initPrepareInstallConnection(
+        context: Context,
+        listener: OnInstallDownloadedUpdateResult,
+    ) {
+        val connection = PrepareInstallServiceConnection(
+            context = context,
+            packageName = context.packageName,
+            scope = retrieveScope(context),
+            onPrepared = {
+                openDownloadedUpdateInstall(context = context, isPrepared = true)
+                listener.onResult(InstallDownloadedUpdateResult.Success)
+            },
+            onError = { throwable ->
+                listener.onResult(InstallDownloadedUpdateResult.Error(throwable))
+            },
+        )
+        if (connection.bind().not()) {
+            listener.onResult(InstallDownloadedUpdateResult.Error(UnknownException()))
+        }
+    }
+
+    private fun openDownloadedUpdateInstall(context: Context, isPrepared: Boolean = false) {
+        val preparedParameter = if (isPrepared) "&$PREPARED_QUERY" else ""
         val intent = Intent(
             Intent.ACTION_VIEW,
-            "$BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE${context.packageName}".toUri(),
+            "$BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE${context.packageName}$preparedParameter"
+                .toUri(),
         ).apply {
             setPackage(BAZAAR_PACKAGE_NAME)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK

@@ -13,4 +13,15 @@ interface IUpdateCheckService {
      * installs a ready download when the user taps install there.
      */
     boolean isUpdateDownloaded(String packageName);
+
+    /**
+     * Fetches the install metadata of the update Bazaar already downloaded for
+     * [packageName], so its installation can be finished without any Bazaar screen
+     * being open yet. Only the app that owns the package can ask for it.
+     *
+     * False means the request failed, including a missing download, no connection and
+     * server errors. True means the model is ready for the install flow that the
+     * caller opens next.
+     */
+    boolean prepareDownloadedUpdateInstall(String packageName);
 }
