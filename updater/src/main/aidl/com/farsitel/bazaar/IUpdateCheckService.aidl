@@ -1,7 +1,4 @@
 package com.farsitel.bazaar;
-
-import com.farsitel.bazaar.IPrepareInstallCallback;
-
 interface IUpdateCheckService {
     long getVersionCode(String packageName);
     long getRemoteVersionCode(String packageName);
@@ -16,13 +13,4 @@ interface IUpdateCheckService {
      * installs a ready download when the user taps install there.
      */
     boolean isUpdateDownloaded(String packageName);
-
-    /**
-     * Prepares the already downloaded update installation for [packageName]. The
-     * returned PendingIntent is created by Bazaar and must be sent by the caller.
-     */
-    oneway void prepareDownloadedUpdateInstall(
-        String packageName,
-        IPrepareInstallCallback callback
-    );
 }

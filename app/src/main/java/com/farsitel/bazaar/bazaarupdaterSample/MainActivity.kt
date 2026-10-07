@@ -1,7 +1,6 @@
 package com.farsitel.bazaar.bazaarupdaterSample
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,7 +12,6 @@ import androidx.compose.ui.Modifier
 import com.farsitel.bazaar.bazaarupdaterSample.ui.theme.BazaarUpdaterSampleTheme
 import com.farsitel.bazaar.updater.BazaarAutoUpdater
 import com.farsitel.bazaar.updater.BazaarUpdater
-import com.farsitel.bazaar.updater.InstallDownloadedUpdateResult
 
 class MainActivity : ComponentActivity() {
 
@@ -65,15 +63,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installDownloadedUpdate() {
-        BazaarUpdater.installDownloadedUpdate(context = this) { result ->
-            if (result is InstallDownloadedUpdateResult.Error) {
-                Toast.makeText(
-                    this,
-                    "Could not start the downloaded update installation",
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
-        }
+        BazaarUpdater.installDownloadedUpdate(context = this)
     }
 
     private fun checkUpdateState() {
