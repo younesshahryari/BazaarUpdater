@@ -16,10 +16,6 @@ public class BazaarIsNotInstalledException(
     override val message: String = "Bazaar is not installed in your device!"
 ) : RuntimeException()
 
-public class InstallDownloadedUpdateException(
-    override val message: String = "Bazaar could not start the downloaded update installation."
-) : RuntimeException()
-
 public class ServiceDisconnectionException(
     public val componentName: ComponentName?,
     override val message: String = "Service $componentName is disconnected."

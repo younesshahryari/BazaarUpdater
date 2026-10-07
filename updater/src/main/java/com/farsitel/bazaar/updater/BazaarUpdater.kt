@@ -1,14 +1,8 @@
 package com.farsitel.bazaar.updater
 
-import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.ResultReceiver
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -118,74 +112,17 @@ public object BazaarUpdater {
      */
     @JvmStatic
     public fun installDownloadedUpdate(context: Context) {
-        try {
-            context.startActivity(installDownloadedUpdateIntent(context))
-        } catch (ignored: ActivityNotFoundException) {
-            // Installed Bazaar version does not support this deep link yet.
-        }
-    }
-
-    @JvmStatic
-    public fun installDownloadedUpdate(
-        context: Context,
-        listener: OnInstallDownloadedUpdateResult,
-    ) {
-        if (verifyBazaarIsInstalled(context).not() ||
-            getBazaarVersionCode(context) < BAZAAR_CODE_INSTALL_DOWNLOADED_RESULT_SUPPORTED
-        ) {
-            listener.onResult(
-                InstallDownloadedUpdateResult.Error(InstallDownloadedUpdateException()),
-            )
-            return
-        }
-
-        val resultReceiver = object : ResultReceiver(Handler(Looper.getMainLooper())) {
-            private var delivered = false
-
-            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                if (delivered) return
-                delivered = true
-                val result = if (resultCode == INSTALL_RESULT_SUCCESS) {
-                    InstallDownloadedUpdateResult.Success
-                } else {
-                    InstallDownloadedUpdateResult.Error(InstallDownloadedUpdateException())
-                }
-                listener.onResult(result)
-            }
-        }
-
-        try {
-            context.startActivity(
-                installDownloadedUpdateIntent(context).apply {
-                    putExtra(INSTALL_RESULT_RECEIVER_EXTRA, resultReceiver)
-                    putExtra(INSTALL_CALLER_IDENTITY_EXTRA, callerIdentity(context))
-                },
-            )
-        } catch (ignored: Exception) {
-            listener.onResult(
-                InstallDownloadedUpdateResult.Error(InstallDownloadedUpdateException()),
-            )
-        }
-    }
-
-    private fun callerIdentity(context: Context): PendingIntent {
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        return PendingIntent.getActivity(
-            context,
-            0,
-            Intent().setPackage(context.packageName),
-            flags,
-        )
-    }
-
-    private fun installDownloadedUpdateIntent(context: Context): Intent {
-        return Intent(
+        val intent = Intent(
             Intent.ACTION_VIEW,
             "$BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE${context.packageName}".toUri(),
         ).apply {
             setPackage(BAZAAR_PACKAGE_NAME)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (ignored: ActivityNotFoundException) {
+            // Installed Bazaar version does not support this deep link yet.
         }
     }
 
