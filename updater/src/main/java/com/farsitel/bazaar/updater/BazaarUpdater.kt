@@ -3,6 +3,8 @@ package com.farsitel.bazaar.updater
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -112,6 +114,46 @@ public object BazaarUpdater {
      */
     @JvmStatic
     public fun installDownloadedUpdate(context: Context) {
+        if (isPrepareInstallSupported(context)) {
+            prepareDownloadedUpdateInstall(context) { /* Compatibility overload ignores result. */ }
+        } else {
+            openLegacyDownloadedUpdateInstall(context)
+        }
+    }
+
+    @JvmStatic
+    public fun installDownloadedUpdate(
+        context: Context,
+        listener: OnInstallDownloadedUpdateResult,
+    ) {
+        if (isPrepareInstallSupported(context).not()) {
+            Handler(Looper.getMainLooper()).post {
+                listener.onResult(InstallDownloadedUpdateResult.Error)
+            }
+            return
+        }
+        prepareDownloadedUpdateInstall(context, listener)
+    }
+
+    private fun prepareDownloadedUpdateInstall(
+        context: Context,
+        listener: OnInstallDownloadedUpdateResult,
+    ) {
+        val connection = PrepareInstallServiceConnection(
+            context = context,
+            packageName = context.packageName,
+            listener = listener,
+        )
+        val intent = Intent(BAZAAR_UPDATE_INTENT).setPackage(BAZAAR_PACKAGE_NAME)
+        val isBound = try {
+            context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        } catch (ignored: Exception) {
+            false
+        }
+        connection.markBound(isBound)
+    }
+
+    private fun openLegacyDownloadedUpdateInstall(context: Context) {
         val intent = Intent(
             Intent.ACTION_VIEW,
             "$BAZAAR_THIRD_PARTY_INSTALL_DOWNLOADED_UPDATE${context.packageName}".toUri(),
@@ -124,6 +166,10 @@ public object BazaarUpdater {
         } catch (ignored: ActivityNotFoundException) {
             // Installed Bazaar version does not support this deep link yet.
         }
+    }
+
+    private fun isPrepareInstallSupported(context: Context): Boolean {
+        return getBazaarVersionCode(context) >= BAZAAR_CODE_PREPARE_INSTALL_SUPPORTED
     }
 
     @OptIn(DelicateCoroutinesApi::class)

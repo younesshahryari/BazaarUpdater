@@ -20,3 +20,4 @@ internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
  * 29.3.0. Bump this if it is released in a later version.
  */
 internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900100
+internal const val BAZAAR_CODE_PREPARE_INSTALL_SUPPORTED = 2900300
