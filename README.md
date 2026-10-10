@@ -217,6 +217,38 @@ flow for the download it is holding on top of your screen, and the user only see
 the system install dialog:
 
 ```kotlin
+BazaarUpdater.installDownloadedUpdate(context = context) { result ->
+    result.doOnSuccess {
+        // Bazaar fetched the install details and opened its install flow
+    }.doOnError { error ->
+        // Nothing was opened: no connection, a server error, or no finished download
+        val errorMessage = error.message
+    }
+}
+```
+
+<details>
+<summary><strong>Java Usage</strong></summary>
+
+```java
+BazaarUpdater.installDownloadedUpdate(context, result -> {
+    if (result.isSuccess()) {
+        // Bazaar fetched the install details and opened its install flow
+    } else {
+        String errorMessage = result.getError().getMessage();
+    }
+});
+```
+
+</details>
+
+Use this listener form while your app is in the foreground: Bazaar checks that it
+still holds the download and fetches its install details before any window is
+opened, so an offline or slow device never opens an install window that cannot do
+anything. The fire-and-forget form below skips that step, and is kept for callers
+that do not need to know the outcome:
+
+```kotlin
 BazaarUpdater.installDownloadedUpdate(context = context)
 ```
 

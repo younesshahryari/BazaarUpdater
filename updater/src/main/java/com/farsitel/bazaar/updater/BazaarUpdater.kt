@@ -15,7 +15,6 @@ import java.lang.ref.WeakReference
 public object BazaarUpdater {
 
     private var connection: WeakReference<UpdateServiceConnection>? = null
-    private var updateDownloadedConnection: WeakReference<UpdateDownloadedServiceConnection>? = null
 
     @JvmStatic
     public fun getLastUpdateState(
@@ -205,7 +204,6 @@ public object BazaarUpdater {
                 releaseUpdateDownloadedService(context, con)
             },
         )
-        updateDownloadedConnection = WeakReference(con)
         if (bindUpdateCheckService(context, con).not()) {
             listener.onResult(UpdateDownloadedResult.Error(UnknownException()))
             releaseUpdateDownloadedService(context, con)
@@ -241,9 +239,6 @@ public object BazaarUpdater {
         val shouldUnbind = synchronized(this) {
             val wasBound = con.isBound
             con.isBound = false
-            if (updateDownloadedConnection?.get() === con) {
-                updateDownloadedConnection = null
-            }
             wasBound
         }
         if (shouldUnbind) {

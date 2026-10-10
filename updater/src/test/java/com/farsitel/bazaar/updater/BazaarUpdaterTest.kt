@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.Looper
 import com.farsitel.bazaar.IUpdateCheckService
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -109,7 +110,79 @@ public class BazaarUpdaterTest {
         assertEquals(0, context.bindCount)
     }
 
-    private fun awaitResult(results: MutableList<InstallDownloadedUpdateResult>) {
+    @Test
+    public fun `successful downloaded check reports the result on the main thread`() {
+        val context = BazaarContext(updateDownloaded = true)
+        val results = mutableListOf<UpdateDownloadedResult>()
+        var callbackOnMainThread = false
+
+        BazaarUpdater.isUpdateDownloaded(context) { result ->
+            callbackOnMainThread = Looper.myLooper() == Looper.getMainLooper()
+            results += result
+        }
+        awaitResult(results)
+
+        assertTrue(results.single().isDownloaded())
+        assertTrue(callbackOnMainThread)
+        assertEquals(1, context.bindCount)
+        assertEquals(1, context.unbindCount)
+        assertTrue(context.startedActivities.isEmpty())
+    }
+
+    @Test
+    public fun `not downloaded check reports a false result`() {
+        val context = BazaarContext(updateDownloaded = false)
+        val results = mutableListOf<UpdateDownloadedResult>()
+
+        BazaarUpdater.isUpdateDownloaded(context, results::add)
+        awaitResult(results)
+
+        assertFalse(results.single().isDownloaded())
+        assertEquals(1, context.unbindCount)
+    }
+
+    @Test
+    public fun `missing Bazaar answers the downloaded check without binding`() {
+        val context = BazaarContext(updateDownloaded = true, isBazaarInstalled = false)
+        val results = mutableListOf<UpdateDownloadedResult>()
+
+        BazaarUpdater.isUpdateDownloaded(context, results::add)
+        awaitResult(results)
+
+        assertTrue(results.single().getError() is BazaarIsNotInstalledException)
+        assertEquals(0, context.bindCount)
+    }
+
+    @Test
+    public fun `unsupported Bazaar version answers the downloaded check without binding`() {
+        val context = BazaarContext(
+            updateDownloaded = true,
+            bazaarVersionCode = BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED - 1,
+        )
+        val results = mutableListOf<UpdateDownloadedResult>()
+
+        BazaarUpdater.isUpdateDownloaded(context, results::add)
+        awaitResult(results)
+
+        assertTrue(results.single().getError() is BazaarIsNotUpdate)
+        assertEquals(0, context.bindCount)
+    }
+
+    @Test
+    public fun `disconnect during the downloaded check answers exactly once`() {
+        val context = BazaarContext(updateDownloaded = true, disconnectAfterConnect = true)
+        val results = mutableListOf<UpdateDownloadedResult>()
+
+        BazaarUpdater.isUpdateDownloaded(context, results::add)
+        awaitResult(results)
+        // Give the call that lost the race the chance to answer a second time.
+        settleMainLooper()
+
+        assertEquals(1, results.size)
+        assertEquals(1, context.unbindCount)
+    }
+
+    private fun awaitResult(results: Collection<*>) {
         val deadline = System.currentTimeMillis() + AWAIT_TIMEOUT_MILLIS
         while (results.isEmpty() && System.currentTimeMillis() < deadline) {
             shadowOf(Looper.getMainLooper()).idle()
@@ -118,8 +191,16 @@ public class BazaarUpdaterTest {
         shadowOf(Looper.getMainLooper()).idle()
     }
 
+    private fun settleMainLooper() {
+        shadowOf(Looper.getMainLooper()).idle()
+        Thread.sleep(AWAIT_STEP_MILLIS * 5)
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
     private inner class BazaarContext(
-        private val prepareResult: Boolean,
+        private val prepareResult: Boolean = true,
+        private val updateDownloaded: Boolean = true,
+        private val disconnectAfterConnect: Boolean = false,
         isBazaarInstalled: Boolean = true,
         bazaarVersionCode: Int = BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED,
     ) : ContextWrapper(application) {
@@ -148,11 +229,14 @@ public class BazaarUpdaterTest {
             flags: Int,
         ): Boolean {
             bindCount++
+            val componentName = ComponentName(BAZAAR_PACKAGE_NAME, "UpdateCheckService")
             Handler(Looper.getMainLooper()).post {
-                conn.onServiceConnected(
-                    ComponentName(BAZAAR_PACKAGE_NAME, "UpdateCheckService"),
-                    updateCheckService.asBinder(),
-                )
+                conn.onServiceConnected(componentName, updateCheckService.asBinder())
+            }
+            if (disconnectAfterConnect) {
+                Handler(Looper.getMainLooper()).post {
+                    conn.onServiceDisconnected(componentName)
+                }
             }
             return true
         }
@@ -170,7 +254,7 @@ public class BazaarUpdaterTest {
 
             override fun getRemoteVersionCode(packageName: String): Long = 0
 
-            override fun isUpdateDownloaded(packageName: String): Boolean = true
+            override fun isUpdateDownloaded(packageName: String): Boolean = updateDownloaded
 
             override fun prepareDownloadedUpdateInstall(packageName: String): Boolean =
                 prepareResult
