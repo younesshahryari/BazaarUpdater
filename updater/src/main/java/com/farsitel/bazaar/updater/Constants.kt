@@ -17,7 +17,8 @@ internal const val BAZAAR_CODE_REMOTE_VERSION_SUPPORTED = 2400700
 internal const val BAZAAR_CODE_AUTO_UPDATE_SUPPORTED = 2600200
 
 /**
- * Bazaar version that first answers [IUpdateCheckService.isUpdateDownloaded], i.e.
- * 29.3.0. Bump this if it is released in a later version.
+ * Bazaar version that first answers [IUpdateCheckService.isUpdateDownloaded] and
+ * [IUpdateCheckService.prepareDownloadedUpdateInstall], i.e. 30.1.0. Bump this if the
+ * methods ship in a later release.
  */
-internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 2900100
+internal const val BAZAAR_CODE_UPDATE_DOWNLOADED_SUPPORTED = 3000100

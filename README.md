@@ -206,7 +206,7 @@ BazaarUpdater.isUpdateDownloaded(context, result -> {
 
 </details>
 
-> ⚠️ Note: This call requires Bazaar version 29.3.0 or higher.
+> ⚠️ Note: This call requires Bazaar version 30.1.0 or higher.
 
 It answers `true` only for the calling application's own package, and only when all
 of these hold: Bazaar has a finished download for it, its version is newer than the
