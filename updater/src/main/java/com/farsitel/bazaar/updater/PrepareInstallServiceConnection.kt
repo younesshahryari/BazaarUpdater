@@ -4,9 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import com.farsitel.bazaar.IUpdateCheckService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +26,6 @@ internal class PrepareInstallServiceConnection(
 
     private val completed = AtomicBoolean(false)
     private val unbound = AtomicBoolean(false)
-    private val mainHandler = Handler(Looper.getMainLooper())
 
     @Volatile
     private var isBound: Boolean = false
@@ -69,7 +66,7 @@ internal class PrepareInstallServiceConnection(
     private fun complete(isPrepared: Boolean) {
         if (completed.compareAndSet(false, true).not()) return
         unbind()
-        mainHandler.post {
+        mainThreadScope.launch {
             if (isPrepared) {
                 onPrepared()
             } else {

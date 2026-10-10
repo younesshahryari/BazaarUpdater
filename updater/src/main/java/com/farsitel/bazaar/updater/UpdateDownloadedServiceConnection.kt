@@ -2,9 +2,7 @@ package com.farsitel.bazaar.updater
 
 import android.content.ComponentName
 import android.content.ServiceConnection
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import com.farsitel.bazaar.IUpdateCheckService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +25,6 @@ internal class UpdateDownloadedServiceConnection(
     internal var isBound: Boolean = false
 
     private val completed = AtomicBoolean(false)
-    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onServiceConnected(name: ComponentName?, boundService: IBinder?) {
         try {
@@ -66,6 +63,6 @@ internal class UpdateDownloadedServiceConnection(
      */
     private fun complete(callback: () -> Unit) {
         if (completed.compareAndSet(false, true).not()) return
-        mainHandler.post { callback() }
+        mainThreadScope.launch { callback() }
     }
 }
